@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const { Requester, Validator } = require('@chainlink/external-adapter')
 
 // Define custom error scenarios for the API.
@@ -12,8 +13,8 @@ const customError = (data) => {
 // with a Boolean value indicating whether or not they
 // should be required.
 const customParams = {
-  base: ['base', 'from', 'coin'],
-  quote: ['quote', 'to', 'market'],
+  vs_currency: ['vs_currency', 'currency'],
+  ids: ['coin', 'id'],
   endpoint: false
 }
 
@@ -21,20 +22,20 @@ const createRequest = (input, callback) => {
   // The Validator helps you validate the Chainlink request data
   const validator = new Validator(callback, input, customParams)
   const jobRunID = validator.validated.id
-  const endpoint = validator.validated.data.endpoint || 'price'
-  const url = `https://min-api.cryptocompare.com/data/${endpoint}`
-  const fsym = validator.validated.data.base.toUpperCase()
-  const tsyms = validator.validated.data.quote.toUpperCase()
+  const endpoint = validator.validated.data.endpoint || 'coins/markets'
+  const url = `https://api.coingecko.com/api/v3/${endpoint}`
+  const vs_currency = validator.validated.data.vs_currency
+  const ids = validator.validated.data.ids
 
   const params = {
-    fsym,
-    tsyms
+    vs_currency,
+    ids
   }
 
   // This is where you would add method and headers
   // you can add method like GET or POST and add it to the config
   // The default is GET requests
-  // method = 'get' 
+  // method = 'get'
   // headers = 'headers.....'
   const config = {
     url,
@@ -48,7 +49,7 @@ const createRequest = (input, callback) => {
       // It's common practice to store the desired value at the top-level
       // result key. This allows different adapters to be compatible with
       // one another.
-      response.data.result = Requester.validateResultNumber(response.data, [tsyms])
+      response.data.result = Requester.validateResultNumber(response.data, ['0', 'market_cap'])
       callback(response.status, Requester.success(jobRunID, response))
     })
     .catch(error => {
